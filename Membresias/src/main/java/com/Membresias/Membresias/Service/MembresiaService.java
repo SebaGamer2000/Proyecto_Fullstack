@@ -1,0 +1,67 @@
+package com.Membresias.Membresias.Service;
+
+import com.Membresias.Membresias.Membresias.Membresias;
+import com.Membresias.Membresias.Repository.MembresiaRepository;
+import com.Membresias.Membresias.dto.MembresiaRequestDto;
+import com.Membresias.Membresias.dto.MembresiaResponseDTO;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class MembresiaService {
+
+    private final MembresiaRepository membresiaRepository;
+    private static final Logger log = LoggerFactory.getLogger(MembresiaService.class);
+
+    private MembresiaResponseDTO maptoDTO(Membresias membresias){
+        return new MembresiaResponseDTO(
+                membresias.getIdMembresia(),
+                membresias.getTipoPlan(),
+                membresias.getBeneficio(),
+                membresias.getPrecio()
+        );
+    }
+    //Lista todas las membresias
+    public List<MembresiaResponseDTO> findAll(){
+        return membresiaRepository.findAll().stream().map(this::maptoDTO).collect(Collectors.toList());
+    }
+    //Encuentra una membresia usando su ID
+    public Optional<MembresiaResponseDTO> findById(Long idMembresia){
+        return membresiaRepository.findById(idMembresia).map(this::maptoDTO);
+    }
+    //Crea y guarda una membresia
+    public MembresiaResponseDTO guardar(MembresiaRequestDto dto){
+        log.info("Guardando usuario");
+        Membresias membresias = new Membresias(
+                null,
+                dto.getTipoPlan(),
+                dto.getBeneficio(),
+                dto.getPrecio()
+        );
+        log.info("Membresia guardada");
+        return maptoDTO(membresiaRepository.save(membresias));
+    }
+    //Actualiza las membresias
+    public Optional<MembresiaResponseDTO> actualizar(Long idMembresia, MembresiaRequestDto dto){
+        log.info("Actualizando membresia...");
+        return membresiaRepository.findById(idMembresia).map(existente ->{
+            existente.setTipoPlan(dto.getTipoPlan());
+            existente.setBeneficio(dto.getBeneficio());
+            existente.setPrecio(dto.getPrecio());
+            log.info("Membresia actualizada");
+            return maptoDTO(membresiaRepository.save(existente));
+        });
+    }
+    //Elimina las membresias
+    public void eliminar(Long idMembresia){membresiaRepository.deleteById(idMembresia);}{
+        log.info("Membresia eliminada");
+    }
+
+}
